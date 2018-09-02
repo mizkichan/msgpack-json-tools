@@ -1,0 +1,7 @@
+[package]
+name = "msgpack-json-tools"
+version = "0.1.0"
+authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
+
+[dependencies]
+structopt = "0.2"
