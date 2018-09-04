@@ -5,3 +5,11 @@ authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
 
 [dependencies]
 structopt = "0.2"
+
+[[bin]]
+name = "json2msgpack"
+path = "src/json2msgpack.rs"
+
+[[bin]]
+name = "msgpack2json"
+path = "src/msgpack2json.rs"
