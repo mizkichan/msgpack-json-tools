@@ -45,14 +45,17 @@ fn main() {
     let mut buf = String::new();
     input.read_to_string(&mut buf).unwrap();
 
-    parse_value(
-        &mut buf
-            .chars()
-            .filter(|c| {
-                *c != '\u{0020}' && *c != '\u{0009}' && *c != '\u{000a}' && *c != '\u{000d}'
-            }).peekable(),
-        &mut output,
-    );
+    let mut input = buf.chars().peekable();
+    skip_ws(&mut input);
+    parse_value(&mut input, &mut output);
+}
+
+fn skip_ws(stdin: &mut Peekable<impl Iterator<Item = char>>) {
+    while let Some('\u{0020}') | Some('\u{0009}') | Some('\u{000a}') | Some('\u{000d}') =
+        stdin.peek()
+    {
+        stdin.next();
+    }
 }
 
 fn parse_value(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
@@ -106,19 +109,26 @@ fn parse_true(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut imp
 }
 
 fn parse_object(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
+    skip_ws(stdin);
     assert_eq!(stdin.next(), Some('{'));
+    skip_ws(stdin);
 
     let mut buf = vec![0u8; 5];
     let mut n = 0usize;
     while stdin.peek().unwrap() != &'}' {
         parse_member(stdin, &mut buf);
+        n += 1;
+
+        skip_ws(stdin);
         if stdin.peek().unwrap() == &',' {
             stdin.next();
+            skip_ws(stdin);
         }
-        n += 1;
     }
 
+    skip_ws(stdin);
     assert_eq!(stdin.next(), Some('}'));
+    skip_ws(stdin);
 
     if n <= 0b1111usize {
         buf[4] = 0b1000_0000u8 | (n as u8);
@@ -144,24 +154,33 @@ fn parse_object(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut i
 
 fn parse_member(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
     parse_string(stdin, stdout);
+    skip_ws(stdin);
     assert_eq!(stdin.next(), Some(':'));
+    skip_ws(stdin);
     parse_value(stdin, stdout);
 }
 
 fn parse_array(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
+    skip_ws(stdin);
     assert_eq!(stdin.next(), Some('['));
+    skip_ws(stdin);
 
     let mut buf = vec![0u8; 5];
     let mut n = 0usize;
     while stdin.peek().unwrap() != &']' {
         parse_value(stdin, &mut buf);
+        n += 1;
+
+        skip_ws(stdin);
         if stdin.peek().unwrap() == &',' {
             stdin.next();
+            skip_ws(stdin);
         }
-        n += 1;
     }
 
+    skip_ws(stdin);
     assert_eq!(stdin.next(), Some(']'));
+    skip_ws(stdin);
 
     if n <= 0b1111usize {
         buf[4] = 0b1001_0000u8 | (n as u8);
