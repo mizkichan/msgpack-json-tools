@@ -82,10 +82,10 @@ fn parse_false(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut im
 }
 
 fn parse_null(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
-    if stdin.next().unwrap() == 't'
-        && stdin.next().unwrap() == 'r'
+    if stdin.next().unwrap() == 'n'
         && stdin.next().unwrap() == 'u'
-        && stdin.next().unwrap() == 'e'
+        && stdin.next().unwrap() == 'l'
+        && stdin.next().unwrap() == 'l'
     {
         stdout.write_all(b"\xc0").unwrap();
     } else {
