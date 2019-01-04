@@ -75,7 +75,7 @@ fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {
 
         // nil
         0xc0 => {
-            assert_eq!(stdout.write(b"null").unwrap(), 1);
+            assert_eq!(stdout.write(b"null").unwrap(), 4);
         }
 
         // never used
@@ -83,12 +83,12 @@ fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {
 
         // false
         0xc2 => {
-            assert_eq!(stdout.write(b"false").unwrap(), 1);
+            assert_eq!(stdout.write(b"false").unwrap(), 5);
         }
 
         // true
         0xc3 => {
-            assert_eq!(stdout.write(b"true").unwrap(), 1);
+            assert_eq!(stdout.write(b"true").unwrap(), 4);
         }
 
         // bin 8
