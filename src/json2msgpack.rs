@@ -1,4 +1,4 @@
-#![feature(if_while_or_patterns, int_to_from_bytes, try_from)]
+#![feature(if_while_or_patterns, try_from)]
 extern crate structopt;
 use std::convert::TryInto;
 use std::fs::File;

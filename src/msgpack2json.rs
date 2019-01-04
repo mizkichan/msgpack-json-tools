@@ -1,4 +1,4 @@
-#![feature(int_to_from_bytes, try_from, box_syntax)]
+#![feature(try_from, box_syntax)]
 extern crate structopt;
 use std::convert::TryInto;
 use std::fs::File;
@@ -52,7 +52,7 @@ fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {
     match byte {
         // positive fixint
         0x00..=0x7f => {
-            write!(stdout, "{}", byte as u8);
+            write!(stdout, "{}", byte as u8).unwrap();
         }
 
         // fixmap
@@ -111,52 +111,52 @@ fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {
 
         // float 32
         0xca => {
-            write!(stdout, "{}", get_f32(stdin));
+            write!(stdout, "{}", get_f32(stdin)).unwrap();
         }
 
         // float 64
         0xcb => {
-            write!(stdout, "{}", get_f64(stdin));
+            write!(stdout, "{}", get_f64(stdin)).unwrap();
         }
 
         // uint 8
         0xcc => {
-            write!(stdout, "{}", get_u8(stdin));
+            write!(stdout, "{}", get_u8(stdin)).unwrap();
         }
 
         // uint 16
         0xcd => {
-            write!(stdout, "{}", get_u16(stdin));
+            write!(stdout, "{}", get_u16(stdin)).unwrap();
         }
 
         // uint 32
         0xce => {
-            write!(stdout, "{}", get_u32(stdin));
+            write!(stdout, "{}", get_u32(stdin)).unwrap();
         }
 
         // uint 64
         0xcf => {
-            write!(stdout, "{}", get_u64(stdin));
+            write!(stdout, "{}", get_u64(stdin)).unwrap();
         }
 
         // int 8
         0xd0 => {
-            write!(stdout, "{}", get_i8(stdin));
+            write!(stdout, "{}", get_i8(stdin)).unwrap();
         }
 
         // int 16
         0xd1 => {
-            write!(stdout, "{}", get_i16(stdin));
+            write!(stdout, "{}", get_i16(stdin)).unwrap();
         }
 
         // int 32
         0xd2 => {
-            write!(stdout, "{}", get_i32(stdin));
+            write!(stdout, "{}", get_i32(stdin)).unwrap();
         }
 
         // int 64
         0xd3 => {
-            write!(stdout, "{}", get_i64(stdin));
+            write!(stdout, "{}", get_i64(stdin)).unwrap();
         }
 
         // fixext 1
@@ -218,10 +218,8 @@ fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {
 
         // negative fixint
         0xe0..=0xff => {
-            write!(stdout, "{}", byte as i8);
+            write!(stdout, "{}", byte as i8).unwrap();
         }
-
-        _ => unreachable!(),
     }
 }
 
@@ -319,5 +317,5 @@ fn print_str(length: u64, stdin: &mut impl Read, stdout: &mut impl Write) {
         length as usize,
         stdin.take(length).read_to_string(&mut buf).unwrap()
     );
-    write!(stdout, r#""{}""#, buf.replace('"', r#"\""#));
+    write!(stdout, r#""{}""#, buf.replace('"', r#"\""#)).unwrap();
 }
