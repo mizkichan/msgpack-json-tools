@@ -18,26 +18,37 @@ fn main() {
     let opt = Opt::from_args();
 
     let stdin = io::stdin();
-    let stdout = io::stdout();
     let mut input = opt
         .input
-        .map(|path| File::open(path).unwrap())
+        .as_ref()
+        .map(|path| File::open(path))
         .ok_or_else(|| stdin.lock());
+    let mut input = match input {
+        Ok(Ok(ref mut file)) => BufReader::<&mut Read>::new(file),
+        Err(ref mut stdin) => BufReader::<&mut Read>::new(stdin),
+        Ok(Err(err)) => {
+            eprintln!("{}: {}", opt.input.unwrap().to_string_lossy(), err);
+            return;
+        }
+    };
+
+    let stdout = io::stdout();
     let mut output = opt
         .output
-        .map(|path| File::create(path).unwrap())
+        .as_ref()
+        .map(|path| File::create(path))
         .ok_or_else(|| stdout.lock());
-
-    let mut input = match input {
-        Ok(ref mut file) => BufReader::<&mut Read>::new(file),
-        Err(ref mut stdin) => BufReader::<&mut Read>::new(stdin),
-    };
     let mut output = match output {
-        Ok(ref mut file) => BufWriter::<&mut Write>::new(file),
+        Ok(Ok(ref mut file)) => BufWriter::<&mut Write>::new(file),
         Err(ref mut stdout) => BufWriter::<&mut Write>::new(stdout),
+        Ok(Err(err)) => {
+            eprintln!("{}: {}", opt.output.unwrap().to_string_lossy(), err);
+            return;
+        }
     };
 
     main_impl(&mut input, &mut output);
+    assert_eq!(output.write(b"\n").unwrap(), 1);
 }
 
 fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {

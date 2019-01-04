@@ -1,4 +1,4 @@
-#![feature(if_while_or_patterns)]
+use matches::*;
 use std::char;
 use std::fs::File;
 use std::io;
@@ -23,27 +23,40 @@ fn main() {
     let opt = Opt::from_args();
 
     let stdin = io::stdin();
-    let stdout = io::stdout();
     let mut input = opt
         .input
-        .map(|path| File::open(path).unwrap())
+        .as_ref()
+        .map(|path| File::open(path))
         .ok_or_else(|| stdin.lock());
+    let mut input = match input {
+        Ok(Ok(ref mut file)) => BufReader::<&mut Read>::new(file),
+        Err(ref mut stdin) => BufReader::<&mut Read>::new(stdin),
+        Ok(Err(err)) => {
+            eprintln!("{}: {}", opt.input.unwrap().to_string_lossy(), err);
+            return;
+        }
+    };
+
+    let stdout = io::stdout();
     let mut output = opt
         .output
-        .map(|path| File::create(path).unwrap())
+        .as_ref()
+        .map(|path| File::create(path))
         .ok_or_else(|| stdout.lock());
-
-    let mut input = match input {
-        Ok(ref mut file) => BufReader::<&mut Read>::new(file),
-        Err(ref mut stdin) => BufReader::<&mut Read>::new(stdin),
-    };
     let mut output = match output {
-        Ok(ref mut file) => BufWriter::<&mut Write>::new(file),
+        Ok(Ok(ref mut file)) => BufWriter::<&mut Write>::new(file),
         Err(ref mut stdout) => BufWriter::<&mut Write>::new(stdout),
+        Ok(Err(err)) => {
+            eprintln!("{}: {}", opt.output.unwrap().to_string_lossy(), err);
+            return;
+        }
     };
 
     let mut buf = String::new();
-    input.read_to_string(&mut buf).unwrap();
+    if let Err(err) = input.read_to_string(&mut buf) {
+        eprintln!("{}: {}", opt.input.unwrap().to_string_lossy(), err);
+        return;
+    };
 
     let mut input = buf.chars().peekable();
     skip_ws(&mut input);
@@ -51,15 +64,18 @@ fn main() {
 }
 
 fn skip_ws(stdin: &mut Peekable<impl Iterator<Item = char>>) {
-    while let Some('\u{0020}') | Some('\u{0009}') | Some('\u{000a}') | Some('\u{000d}') =
-        stdin.peek()
-    {
+    while matches!(
+        stdin.peek(),
+        Some('\u{0020}') | Some('\u{0009}') | Some('\u{000a}') | Some('\u{000d}')
+    ) {
         stdin.next();
     }
 }
 
 fn parse_value(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
-    match stdin.peek().unwrap() {
+    let c = stdin.peek().unwrap();
+    assert_matches!(c, 'f' | 'n' | 't' | '{' | '[' | '-' | '0'..='9' | '"');
+    match c {
         'f' => parse_false(stdin, stdout),
         'n' => parse_null(stdin, stdout),
         't' => parse_true(stdin, stdout),
@@ -67,45 +83,23 @@ fn parse_value(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut im
         '[' => parse_array(stdin, stdout),
         '-' | '0'..='9' => parse_number(stdin, stdout),
         '"' => parse_string(stdin, stdout),
-        _ => panic!(),
+        _ => unreachable!(),
     }
 }
 
 fn parse_false(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
-    if stdin.next().unwrap() == 'f'
-        && stdin.next().unwrap() == 'a'
-        && stdin.next().unwrap() == 'l'
-        && stdin.next().unwrap() == 's'
-        && stdin.next().unwrap() == 'e'
-    {
-        stdout.write_all(b"\xc2").unwrap();
-    } else {
-        panic!();
-    }
+    assert_eq!(stdin.by_ref().take(5).collect::<String>(), "false");
+    stdout.write_all(b"\xc2").unwrap();
 }
 
 fn parse_null(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
-    if stdin.next().unwrap() == 'n'
-        && stdin.next().unwrap() == 'u'
-        && stdin.next().unwrap() == 'l'
-        && stdin.next().unwrap() == 'l'
-    {
-        stdout.write_all(b"\xc0").unwrap();
-    } else {
-        panic!();
-    }
+    assert_eq!(stdin.by_ref().take(4).collect::<String>(), "null");
+    stdout.write_all(b"\xc0").unwrap();
 }
 
 fn parse_true(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {
-    if stdin.next().unwrap() == 't'
-        && stdin.next().unwrap() == 'r'
-        && stdin.next().unwrap() == 'u'
-        && stdin.next().unwrap() == 'e'
-    {
-        stdout.write_all(b"\xc3").unwrap();
-    } else {
-        panic!();
-    }
+    assert_eq!(stdin.by_ref().take(4).collect::<String>(), "true");
+    stdout.write_all(b"\xc3").unwrap();
 }
 
 fn parse_object(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut impl Write) {

@@ -5,6 +5,7 @@ authors = ["Mizki SUZUMORI <suzumorimizuki@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+matches = "0.1"
 structopt = "0.2"
 
 [[bin]]
