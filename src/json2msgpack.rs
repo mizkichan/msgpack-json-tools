@@ -1,8 +1,8 @@
-#![feature(if_while_or_patterns, try_from)]
-extern crate structopt;
-use std::convert::TryInto;
+#![feature(if_while_or_patterns)]
+use std::char;
 use std::fs::File;
-use std::io::{self, BufReader, BufWriter, Read, Write};
+use std::io;
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::iter::Peekable;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -286,10 +286,10 @@ fn parse_string(stdin: &mut Peekable<impl Iterator<Item = char>>, stdout: &mut i
                     'n' => '\u{000a}',
                     'r' => '\u{000d}',
                     't' => '\u{0009}',
-                    'u' => u32::from_str_radix(&stdin.take(4).collect::<String>(), 16)
-                        .unwrap()
-                        .try_into()
-                        .unwrap(),
+                    'u' => char::from_u32(
+                        u32::from_str_radix(&stdin.take(4).collect::<String>(), 16).unwrap(),
+                    )
+                    .unwrap(),
                     _ => panic!(),
                 });
             }

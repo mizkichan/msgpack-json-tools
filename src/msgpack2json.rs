@@ -1,8 +1,6 @@
-#![feature(try_from, box_syntax)]
-extern crate structopt;
-use std::convert::TryInto;
 use std::fs::File;
-use std::io::{self, BufReader, BufWriter, Read, Write};
+use std::io;
+use std::io::{BufReader, BufWriter, Read, Write};
 use std::path::PathBuf;
 use structopt::StructOpt;
 
@@ -200,7 +198,7 @@ fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {
 
         // array 32
         0xdd => {
-            let length = get_u32(stdin).try_into().unwrap();
+            let length = get_u32(stdin);
             print_array(length, stdin, stdout);
         }
 
@@ -212,7 +210,7 @@ fn main_impl(stdin: &mut impl Read, stdout: &mut impl Write) {
 
         // map 32
         0xdf => {
-            let length = get_u32(stdin).try_into().unwrap();
+            let length = get_u32(stdin);
             print_map(length, stdin, stdout);
         }
 
@@ -287,7 +285,7 @@ fn get_f64(stdin: &mut Read) -> f64 {
     f64::from_bits(get_u64(stdin))
 }
 
-fn print_map(length: usize, stdin: &mut impl Read, stdout: &mut impl Write) {
+fn print_map(length: u32, stdin: &mut impl Read, stdout: &mut impl Write) {
     assert_eq!(stdout.write(b"{").unwrap(), 1);
     for i in 0..length {
         main_impl(stdin, stdout);
@@ -300,7 +298,7 @@ fn print_map(length: usize, stdin: &mut impl Read, stdout: &mut impl Write) {
     assert_eq!(stdout.write(b"}").unwrap(), 1);
 }
 
-fn print_array(length: usize, stdin: &mut impl Read, stdout: &mut impl Write) {
+fn print_array(length: u32, stdin: &mut impl Read, stdout: &mut impl Write) {
     assert_eq!(stdout.write(b"[").unwrap(), 1);
     for i in 0..length {
         main_impl(stdin, stdout);
